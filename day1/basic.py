@@ -9,8 +9,26 @@ data = pd.read_csv('data/train.csv')
 # Mapping Sex to 0 and 1 (Women had higher survivablity so maybe setting it to 1 helps)
 data['Sex'] = data['Sex'].map({'male': 0, 'female': 1})
 
+# Extract title from Name
+data['Title'] = data['Name'].str.extract(' ([A-Za-z]+)\.', expand=False)
+
+# Group rare titles
+data['Title'] = data['Title'].replace(['Lady', 'Countess', 'Capt', 'Col',
+                                        'Don', 'Dr', 'Major', 'Rev', 'Sir',
+                                        'Jonkheer', 'Dona'], 'Rare')
+data['Title'] = data['Title'].replace(['Mlle', 'Ms'], 'Miss')
+data['Title'] = data['Title'].replace('Mme', 'Mrs')
+
+# Map to numbers
+title_map = {'Mr': 0, 'Miss': 1, 'Mrs': 2, 'Master': 3, 'Rare': 4}
+data['Title'] = data['Title'].map(title_map)
+
+# Create family size and IsAlone (after loading data)
+data['FamilySize'] = data['SibSp'] + data['Parch'] + 1
+data['IsAlone'] = (data['FamilySize'] == 1).astype(int)
+
 # 2. Select features and target
-X = data[['Pclass', 'Sex', 'Age', 'SibSp', 'Parch', 'Fare']]  # 6 features now (was 5)
+X = data[['Pclass', 'Sex', 'Age', 'SibSp', 'Parch', 'Fare', 'Title', 'IsAlone']]  # 6 features now (was 5)
 y = data['Survived']  # Survived or not
 
 # Fill missing Age values (leave the rest for now)
